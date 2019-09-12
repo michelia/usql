@@ -4,10 +4,14 @@ import (
 	"database/sql"
 	"time"
 
+	. "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
 )
 
 var ErrNoRows = sql.ErrNoRows
+
+// 防止提示引用squirrel没有使用错误
+var _ = Select
 
 // DB *sqlx.DB的简单封装
 type DB struct {
