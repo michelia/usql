@@ -25,6 +25,12 @@ func (db *DB) NamedGet(dest interface{}, query string, arg interface{}) error {
 }
 
 // NamedSelect 类似于 Select
+// https://jmoiron.github.io/sqlx/#namedParams
+// p := Place{TelephoneCode: 50}
+// pp := []Place{}
+// // select all telcodes > 50
+// nstmt, err := db.PrepareNamed(`SELECT * FROM place WHERE telcode > :telcode`)
+// err = nstmt.Select(&pp, p)
 func (db *DB) NamedSelect(dest interface{}, query string, arg interface{}) error {
 	nstmt, err := db.PrepareNamed(query)
 	if err != nil {
