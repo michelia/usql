@@ -18,9 +18,31 @@ var (
 	Update = sq.Update
 )
 
+type Builder interface {
+	ToSql() (string, []interface{}, error)
+}
+
 // DB *sqlx.DB的简单封装
 type DB struct {
 	*sqlx.DB
+}
+
+// SqGet squirrel 与 sqlx.Get 结合
+func (db *DB) SqGet(dest interface{}, builder Builder) error {
+	query, args, err := builder.ToSql()
+	if err != nil {
+		return err
+	}
+	return db.Get(dest, query, args...)
+}
+
+// SqSelect squirrel 与 sqlx.Select 结合
+func (db *DB) SqSelect(dest interface{}, builder Builder) error {
+	query, args, err := builder.ToSql()
+	if err != nil {
+		return err
+	}
+	return db.Select(dest, query, args...)
 }
 
 // NamedGet 类似于 Get
