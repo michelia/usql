@@ -1,4 +1,4 @@
-module usql
+module github.com/michelia/usql
 
 go 1.13
 
