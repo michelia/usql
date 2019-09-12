@@ -12,10 +12,7 @@ var ErrNoRows = sql.ErrNoRows
 
 var (
 	Select = sq.Select
-	Insert = sq.Insert
-	Delete = sq.Delete
 	Case   = sq.Case
-	Update = sq.Update
 )
 
 type Builder interface {
@@ -25,6 +22,21 @@ type Builder interface {
 // DB *sqlx.DB的简单封装
 type DB struct {
 	*sqlx.DB
+}
+
+// Insert squirrel 与 sqlx.db 结合
+func (db *DB) Insert(into string) sq.InsertBuilder {
+	return sq.Insert(into).RunWith(db)
+}
+
+// Delete squirrel 与 sqlx.db 结合
+func (db *DB) Delete(into string) sq.DeleteBuilder {
+	return sq.Delete(into).RunWith(db)
+}
+
+// Update squirrel 与 sqlx.db 结合
+func (db *DB) Update(into string) sq.UpdateBuilder {
+	return sq.Update(into).RunWith(db)
 }
 
 // SqGet squirrel 与 sqlx.Get 结合
