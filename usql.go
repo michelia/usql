@@ -4,15 +4,14 @@ import (
 	"database/sql"
 	"time"
 
-	sq "github.com/Masterminds/squirrel"
+	Sq "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
 )
 
 var ErrNoRows = sql.ErrNoRows
 
 var (
-	Select = sq.Select
-	Case   = sq.Case
+	Select = Sq.Select
 )
 
 type Builder interface {
@@ -25,18 +24,18 @@ type DB struct {
 }
 
 // Insert squirrel 与 sqlx.db 结合
-func (db *DB) Insert(into string) sq.InsertBuilder {
-	return sq.Insert(into).RunWith(db)
+func (db *DB) Insert(into string) Sq.InsertBuilder {
+	return Sq.Insert(into).RunWith(db)
 }
 
 // Delete squirrel 与 sqlx.db 结合
-func (db *DB) Delete(into string) sq.DeleteBuilder {
-	return sq.Delete(into).RunWith(db)
+func (db *DB) Delete(into string) Sq.DeleteBuilder {
+	return Sq.Delete(into).RunWith(db)
 }
 
 // Update squirrel 与 sqlx.db 结合
-func (db *DB) Update(into string) sq.UpdateBuilder {
-	return sq.Update(into).RunWith(db)
+func (db *DB) Update(into string) Sq.UpdateBuilder {
+	return Sq.Update(into).RunWith(db)
 }
 
 // SqGet squirrel 与 sqlx.Get 结合
