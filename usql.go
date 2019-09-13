@@ -4,19 +4,25 @@ import (
 	"database/sql"
 	"time"
 
-	Sq "github.com/Masterminds/squirrel"
+	sq "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
 )
 
 var ErrNoRows = sql.ErrNoRows
 
 var (
-	Select = Sq.Select
+	Select = sq.Select
+	Insert = sq.Insert
+	Case   = sq.Case
+	Expr   = sq.Expr
 )
 
-type Builder interface {
-	ToSql() (string, []interface{}, error)
-}
+type (
+	Or  = sq.Or
+	And = sq.And
+	Eq  = sq.Eq
+	Gl  = sq.Gt
+)
 
 // DB *sqlx.DB的简单封装
 type DB struct {
@@ -24,23 +30,33 @@ type DB struct {
 }
 
 // Insert squirrel 与 sqlx.db 结合
-func (db *DB) Insert(into string) Sq.InsertBuilder {
-	return Sq.Insert(into).RunWith(db)
+func (db *DB) Insert(into string) sq.InsertBuilder {
+	return sq.Insert(into).RunWith(db)
 }
 
 // Delete squirrel 与 sqlx.db 结合
-func (db *DB) Delete(into string) Sq.DeleteBuilder {
-	return Sq.Delete(into).RunWith(db)
+func (db *DB) Delete(into string) sq.DeleteBuilder {
+	return sq.Delete(into).RunWith(db)
 }
 
 // Update squirrel 与 sqlx.db 结合
-func (db *DB) Update(into string) Sq.UpdateBuilder {
-	return Sq.Update(into).RunWith(db)
+func (db *DB) Update(into string) sq.UpdateBuilder {
+	return sq.Update(into).RunWith(db)
+}
+
+// Replace squirrel 与 sqlx.db 结合
+func (db *DB) Replace(insert sq.InsertBuilder) (sql.Result, error) {
+	query, args, err := insert.ToSql()
+	if err != nil {
+		return nil, err
+	}
+	query = "Replace" + query[6:]
+	return db.Exec(query, args...)
 }
 
 // SqGet squirrel 与 sqlx.Get 结合
-func (db *DB) SqGet(dest interface{}, builder Builder) error {
-	query, args, err := builder.ToSql()
+func (db *DB) SqGet(dest interface{}, selectBuilder sq.SelectBuilder) error {
+	query, args, err := selectBuilder.ToSql()
 	if err != nil {
 		return err
 	}
@@ -48,8 +64,8 @@ func (db *DB) SqGet(dest interface{}, builder Builder) error {
 }
 
 // SqSelect squirrel 与 sqlx.Select 结合
-func (db *DB) SqSelect(dest interface{}, builder Builder) error {
-	query, args, err := builder.ToSql()
+func (db *DB) SqSelect(dest interface{}, selectBuilder sq.SelectBuilder) error {
+	query, args, err := selectBuilder.ToSql()
 	if err != nil {
 		return err
 	}
