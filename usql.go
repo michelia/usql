@@ -12,12 +12,12 @@ var ErrNoRows = sql.ErrNoRows
 
 var (
 	Select = sq.Select
-	Insert = sq.Insert
 	Case   = sq.Case
 	Expr   = sq.Expr
 )
 
 type (
+	H   = map[string]interface{}
 	Or  = sq.Or
 	And = sq.And
 	Eq  = sq.Eq
@@ -30,8 +30,18 @@ type DB struct {
 }
 
 // Insert squirrel 与 sqlx.db 结合
-func (db *DB) Insert(into string) sq.InsertBuilder {
-	return sq.Insert(into).RunWith(db)
+func (db *DB) Insert(into string, colVals H) (sql.Result, error) {
+	return sq.Insert(into).SetMap(colVals).RunWith(db).Exec()
+}
+
+// Replace squirrel 与 sqlx.db 结合
+func (db *DB) Replace(into string, colVals H) (sql.Result, error) {
+	query, args, err := sq.Insert(into).SetMap(colVals).ToSql()
+	if err != nil {
+		return nil, err
+	}
+	query = "Replace" + query[6:]
+	return db.Exec(query, args...)
 }
 
 // Delete squirrel 与 sqlx.db 结合
@@ -42,16 +52,6 @@ func (db *DB) Delete(into string) sq.DeleteBuilder {
 // Update squirrel 与 sqlx.db 结合
 func (db *DB) Update(into string) sq.UpdateBuilder {
 	return sq.Update(into).RunWith(db)
-}
-
-// Replace squirrel 与 sqlx.db 结合
-func (db *DB) Replace(insert sq.InsertBuilder) (sql.Result, error) {
-	query, args, err := insert.ToSql()
-	if err != nil {
-		return nil, err
-	}
-	query = "Replace" + query[6:]
-	return db.Exec(query, args...)
 }
 
 // SqGet squirrel 与 sqlx.Get 结合
