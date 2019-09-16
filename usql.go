@@ -55,13 +55,17 @@ func (db *DB) Update(into string) sq.UpdateBuilder {
 }
 
 // SqGet squirrel 与 sqlx.Get 结合
-func (db *DB) SqGet(dest interface{}, selectBuilder sq.SelectBuilder) error {
-	query, args, err := selectBuilder.ToSql()
-	if err != nil {
-		return err
-	}
-	return db.Get(dest, query, args...)
+func (db *DB) SqGet(columns ...string) sq.SelectBuilder {
+	return sq.Select(columns...).RunWith(db)
 }
+
+// func (db *DB) SqGet(dest interface{}, selectBuilder sq.SelectBuilder) error {
+// 	query, args, err := selectBuilder.ToSql()
+// 	if err != nil {
+// 		return err
+// 	}
+// 	return db.Get(dest, query, args...)
+// }
 
 // SqSelect squirrel 与 sqlx.Select 结合
 func (db *DB) SqSelect(dest interface{}, selectBuilder sq.SelectBuilder) error {
