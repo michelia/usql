@@ -2,18 +2,22 @@ package usql
 
 import (
 	"database/sql"
+	"fmt"
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/gocraft/dbr/v2"
 	"github.com/jmoiron/sqlx"
+	"github.com/michelia/ulog"
 )
 
-var ErrNoRows = sql.ErrNoRows
-
 var (
-	Select = sq.Select
-	Case   = sq.Case
-	Expr   = sq.Expr
+	Select      = sq.Select
+	Case        = sq.Case
+	Expr        = sq.Expr
+	ErrNoRows   = sql.ErrNoRows
+	ErrNotFound = dbr.ErrNotFound
 )
 
 type (
@@ -127,4 +131,72 @@ func MustConnect(driverName, dataSourceName string) *DB {
 	d := &DB{DB: db}
 	d.Setting(10, 1)
 	return d
+}
+
+// dbr 以后推荐用这个
+// https://github.com/gocraft/dbr
+// https://godoc.org/github.com/gocraft/dbr#Connection
+
+type Session = dbr.Session
+
+// Connection
+// dbr的Connection简单封装, 增加了ulog
+type Connection struct {
+	*dbr.Connection
+	log ulog.Logger
+}
+
+func (c *Connection) New() *Session {
+	if c.log != nil {
+		return c.NewSession(nil)
+	}
+	return c.NewSession(nil)
+}
+
+// Setting
+// Lifetime 连接的生命期 单位是分钟
+// idle 最大闲置数
+func (c *Connection) Setting(Lifetime, idle int) {
+	// https://colobu.com/2019/05/27/configuring-sql-DB-for-better-performance/
+	c.SetConnMaxLifetime(time.Minute * time.Duration(Lifetime)) // 处理 Driver: invalid connection
+	c.SetMaxIdleConns(idle)
+	// db.SetMaxOpenConns(n)
+}
+
+// Open 打开一个dbr的Connection
+// dsn  连接地址信息
+// log ulog.Logger 可为 nil
+func Open(dsn string, log ulog.Logger) (*Connection, error) {
+	conn, err := dbr.Open("mysql", dsn, nil)
+	if err != nil {
+		return nil, err
+	}
+	c := &Connection{Connection: conn, log: log}
+	c.Setting(10, 1)
+	return c, nil
+}
+
+// MustOpen 打开一个dbr的Connection
+// dsn  连接地址信息
+// log ulog.Logger 可为 nil
+func MustOpen(dsn string, log ulog.Logger) *Connection {
+	conn, err := Open(dsn, log)
+	if err != nil {
+		if log != nil {
+			log.Fatal().Caller().Err(err).Msg("MustOpen")
+		}
+		panic(err)
+	}
+	return conn
+}
+
+// SqlStr  序列化*dbr.SelectStmt 可以用来打印输出sql
+func SqlStr(stmt *dbr.SelectStmt) string {
+	buf := dbr.NewBuffer()
+	err := stmt.Build(stmt.Dialect, buf)
+	fmt.Println(buf.String())
+	if err != nil {
+		return "error: " + err.Error() + "----" + buf.String()
+	}
+	return buf.String()
 }
