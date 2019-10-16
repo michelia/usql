@@ -35,6 +35,16 @@ type DB struct {
 }
 
 // Insert squirrel 与 sqlx.db 结合
+func (db *DB) Beginx() (*Tx, error) {
+	tx, err := db.DB.Beginx()
+	if err != nil {
+		return nil, err
+	}
+	txx := &Tx{tx}
+	return txx, nil
+}
+
+// Insert squirrel 与 sqlx.db 结合
 func (db *DB) Insert(into string, colVals H) (sql.Result, error) {
 	return sq.Insert(into).SetMap(colVals).RunWith(db).Exec()
 }
