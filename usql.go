@@ -8,6 +8,7 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gocraft/dbr/v2"
+	"github.com/gocraft/dbr/v2/dialect"
 	"github.com/jmoiron/sqlx"
 	"github.com/michelia/ulog"
 )
@@ -133,6 +134,21 @@ func MustConnect(driverName, dataSourceName string) *DB {
 	return d
 }
 
+// Tx *sqlx.Tx 的简单封装
+type Tx struct {
+	*sqlx.Tx
+}
+
+// Replace squirrel 与 sqlx.db 结合
+func (tx *Tx) Replace(into string, colVals H) (sql.Result, error) {
+	query, args, err := sq.Insert(into).SetMap(colVals).ToSql()
+	if err != nil {
+		return nil, err
+	}
+	query = "Replace" + query[6:]
+	return tx.Exec(query, args...)
+}
+
 // dbr 以后推荐用这个
 // https://github.com/gocraft/dbr
 // https://godoc.org/github.com/gocraft/dbr#Connection
@@ -191,9 +207,9 @@ func MustOpen(dsn string, log ulog.Logger) *Connection {
 }
 
 // SqlStr  序列化*dbr.SelectStmt 可以用来打印输出sql
-func SqlStr(stmt *dbr.SelectStmt) string {
+func SqlStr(build dbr.Builder) string {
 	buf := dbr.NewBuffer()
-	err := stmt.Build(stmt.Dialect, buf)
+	err := build.Build(dialect.MySQL, buf)
 	fmt.Println(buf.String())
 	if err != nil {
 		return "error: " + err.Error() + "----" + buf.String()
