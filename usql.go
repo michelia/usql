@@ -2,7 +2,6 @@ package usql
 
 import (
 	"database/sql"
-	"fmt"
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
@@ -220,9 +219,14 @@ func MustOpen(dsn string, log ulog.Logger) *Connection {
 func SqlStr(build dbr.Builder) string {
 	buf := dbr.NewBuffer()
 	err := build.Build(dialect.MySQL, buf)
-	fmt.Println(buf.String())
+	// fmt.Println(buf.String())
 	if err != nil {
-		return "error: " + err.Error() + "----" + buf.String()
+		return "SqlStr Error: " + err.Error()
 	}
-	return buf.String()
+	// return buf.String() + ";" + fmt.Sprintf("%+v", buf.Value())
+	s, err := dbr.InterpolateForDialect(buf.String(), buf.Value(), dialect.MySQL)
+	if err != nil {
+		return "SqlStr Error: " + err.Error()
+	}
+	return s
 }

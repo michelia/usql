@@ -1,26 +1,26 @@
 package usql
 
 import (
-	"fmt"
 	"testing"
 
-	sq "github.com/Masterminds/squirrel"
 	"github.com/gocraft/dbr/v2"
 )
 
 func TestSql(t *testing.T) {
-	// a, b, c := Select("c1, c2, c3").Columns("a").From("t use index(key)").Where("c1 = 3").Where(Or{Expr("c2=4"), Eq{"c4": 5}}).ToSql()
-	// fmt.Println(a, ":", b, c)
-	a, b, c := sq.Insert("t").Columns("a,b,c").Values(1, 2, 3).SetMap(map[string]interface{}{
-		"a": 4,
-		"b": 5,
-		"c": 6,
-	}).ToSql()
-	// a = "Replace" + a[6:]
-	// a, b, c = sq.Select("a1, a2").Where(`a=3`).From("ttt").ToSql()
-	fmt.Println(a, ":", b, c)
-	s := dbr.Select("column, `a`").Where("query=3").Where("aa=9").From("tab use index(xxx)").From("new use index()")
-	t.Logf("xxx: %+v\n", SqlStr(s))
-	i := dbr.InsertInto("a").Pair("xxx", 123)
-	t.Logf("xxx: %+v\n", SqlStr(i))
+	t.Log(SqlStr(
+		dbr.Select("column, `a`").Where("query=3 and a in ?", []int64{1, 2, 3, 4, 5}).Where("aa=?", 9).From("tab use index(xxx)").From("new use index()"),
+	))
+	t.Log(SqlStr(
+		dbr.InsertInto("a").Columns("c1", "c2").Values(1, 2).Values(6, "abc'`"),
+	))
+	t.Log(SqlStr(
+		dbr.Select("count(id)").From(
+			dbr.Select("*").From("suggestions").As("t_count"),
+		),
+	))
+	t.Log(SqlStr(
+		dbr.Select("*").From("suggestions").
+			Join("subdomains", "suggestions.subdomain_id = subdomains.id").
+			Join("accounts", "subdomains.accounts_id = accounts.id").Where(dbr.Or(dbr.Eq("abc", 3), dbr.Neq("b", "4"))),
+	))
 }
