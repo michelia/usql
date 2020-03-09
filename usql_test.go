@@ -19,11 +19,11 @@ func TestSql(t *testing.T) {
 		),
 	))
 	t.Log(SqlStr(
-		dbr.Select("*").From("suggestions").
+		dbr.Select("abc", dbr.I("t1.a").As("a"), "t2.b as b").From("suggestions").
 			Join("subdomains", "suggestions.subdomain_id = subdomains.id").
 			Join("accounts", "subdomains.accounts_id = accounts.id").Where(dbr.Or(dbr.Eq("abc", 3), dbr.Neq("b", "4"))).Where("time > abc"),
 	))
 	t.Log(SqlStr(
-		dbr.Update("user").Set("a", 3).Set("b", dbr.Expr("? + ?", dbr.I("b"), 3)).Set("time", dbr.Expr("now()")),
+		dbr.Update("user").Set("a", 3).Set("b", dbr.Expr("? + ?", dbr.I("b"), 3)).Set("time", dbr.Expr("abc + now() + ? + ?", 4, dbr.I("test"))),
 	))
 }
