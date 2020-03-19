@@ -24,6 +24,6 @@ func TestSql(t *testing.T) {
 			Join("accounts", "subdomains.accounts_id = accounts.id").Where(dbr.Or(dbr.Eq("abc", 3), dbr.Neq("b", "4"))).Where("time > abc"),
 	))
 	t.Log(SqlStr(
-		dbr.Update("user").Set("a", 3).Set("b", dbr.Expr("? + ?", dbr.I("b"), 3)).Set("time", dbr.Expr("abc + now() + ? + ?", 4, dbr.I("test"))),
+		dbr.Update("usera").Set("a", 3).Set("b", dbr.Expr("? + ?", dbr.I("b"), 3)).Set("time", dbr.Expr("abc + now() + ? + ?", 4, dbr.I("test"))),
 	))
 }
